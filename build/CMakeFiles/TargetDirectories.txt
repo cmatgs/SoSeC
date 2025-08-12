@@ -1,0 +1,3 @@
+C:/Users/cmueller/Desktop/Sonnensensor/sosec/build/CMakeFiles/SoSeSta.dir
+C:/Users/cmueller/Desktop/Sonnensensor/sosec/build/CMakeFiles/edit_cache.dir
+C:/Users/cmueller/Desktop/Sonnensensor/sosec/build/CMakeFiles/rebuild_cache.dir
