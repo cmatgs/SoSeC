@@ -43,27 +43,27 @@ set(SOSESTA_CORE_SRCS
   src/app/App.cpp   # <— Pfadfix
 
   # GUI
-  gui/MainFrame.cpp
-  gui/ChannelWidget.cpp
-  gui/ConfigEditor.cpp
+  src/gui/MainFrame.cpp
+  src/gui/ChannelWidget.cpp
+  src/gui/ConfigEditor.cpp
 
   # Hardware-Fabrik
-  hw/HardwareFactory.cpp
+  src/hw/HardwareFactory.cpp
 )
 
 # Real-Quellen (nur wenn echte Hardware)
 set(SOSESTA_REAL_SRCS
-  hw/RealHardware.cpp
-  hw/relays/RelayController.cpp
-  hw/leds/LEDStrip.cpp
-  hw/daq/RedLabDAQ.cpp
-  hw/mux/TCA9548A.cpp
-  hw/power/INA219.cpp
+  src/hw/RealHardware.cpp
+  src/hw/relays/RelayController.cpp
+  src/hw/leds/LEDStrip.cpp
+  src/hw/daq/RedLabDAQ.cpp
+  src/hw/mux/TCA9548A.cpp
+  src/hw/power/INA219.cpp
 )
 
 # Mock-Quellen (nur wenn Simulation)
 set(SOSESTA_MOCK_SRCS
-  hw/mock/MockHardware.cpp
+  src/hw/mock/MockHardware.cpp
 )
 
 # -------------------------
