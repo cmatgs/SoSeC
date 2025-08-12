@@ -1,6 +1,6 @@
 #pragma once
 #include <wx/wx.h>
-#include "App.hpp"
+#include "app/App.hpp"
 
 class ConfigEditorDlg : public wxDialog {
 public:
