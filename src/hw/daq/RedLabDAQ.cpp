@@ -49,7 +49,7 @@ int RedLabDAQ::ToUldaqRange(RedLabDAQ::Range r) {
     }
 }
 
-bool RedLabDAQ::Connect(const Options& opt, std::string* err) {
+bool RedLabDAQ::Connect(Options opt, std::string* err) {
     Disconnect();
     range_        = opt.range;
     differential_ = opt.differential;
