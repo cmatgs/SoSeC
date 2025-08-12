@@ -41,7 +41,7 @@ public:
     RedLabDAQ(RedLabDAQ&&) noexcept;
     RedLabDAQ& operator=(RedLabDAQ&&) noexcept;
 
-    bool Connect(const Options& opt = {}, std::string* err = nullptr);
+    bool Connect(Options opt = Options{}, std::string* err = nullptr);
     void Disconnect();
 
     /// Liest eine Einzelmessung in Volt von Kanal ch (0-basiert).
