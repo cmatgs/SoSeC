@@ -1,4 +1,4 @@
-#include "hw/daq/RedLabDAQ.hpp"
+#include "RedLabDAQ.hpp"
 #include <sstream>
 #include <cstring>
 
