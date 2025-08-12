@@ -40,7 +40,7 @@ include(${wxWidgets_USE_FILE})
 set(SOSESTA_CORE_SRCS
   # Haupt-Quellen
   src/main.cpp
-  src/app/App.cpp
+  src/app/App.cpp   # <— Pfadfix
 
   # GUI
   gui/MainFrame.cpp
@@ -135,12 +135,9 @@ install(TARGETS sosesta RUNTIME DESTINATION bin)
 # Build-Befehle
 # -------------------------
 # Mock:
-#   cmake -B build -G Ninja -DSOSESTA_USE_MOCK=ON
+#   cmake -B build -G Ninja -DSOSESTA_USE_MOCK=ON -DwxWidgets_CONFIG_EXECUTABLE=/usr/local/bin/wx-config
 #   cmake --build build
 #
 # Real:
-#   cmake -B build -G Ninja
-#   cmake --build build
-#
-# wxWidgets manuell:
 #   cmake -B build -G Ninja -DwxWidgets_CONFIG_EXECUTABLE=/usr/local/bin/wx-config
+#   cmake --build build
