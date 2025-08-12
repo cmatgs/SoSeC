@@ -3,7 +3,7 @@
 #include <wx/notebook.h>
 #include <wx/timer.h>
 #include <wx/dataview.h>
-#include "App.hpp"
+#include "app/App.hpp"
 #include "ChannelWidget.hpp"
 
 class MainFrame : public wxFrame {
