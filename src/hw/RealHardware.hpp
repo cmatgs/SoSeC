@@ -1,10 +1,10 @@
 #pragma once
 #include "IHardware.hpp"
-#include "RelayController.hpp"
-#include "RedLabDAQ.hpp"
-#include "TCA9548A.hpp"
-#include "INA219.hpp"
-#include "LEDStrip.hpp"
+#include "relays/RelayController.hpp"
+#include "daq/RedLabDAQ.hpp"
+#include "mux/TCA9548A.hpp"
+#include "power/INA219.hpp"
+#include "leds/LEDStrip.hpp"
 #include <mutex>
 #include <optional>
 
