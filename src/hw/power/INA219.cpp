@@ -1,4 +1,4 @@
-#include "hw/power/INA219.hpp"
+#include "INA219.hpp"
 #include <sstream>
 
 INA219Manager::INA219Manager(const Config& cfg)
