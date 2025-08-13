@@ -1,71 +1,64 @@
 #include "ConfigEditor.hpp"
-#include <sstream>
+#include "app/App.hpp"            // liefert AppConfig
+#include <wx/valnum.h>
 
-ConfigEditorDlg::ConfigEditorDlg(wxWindow* parent, Config& cfg)
-: wxDialog(parent, wxID_ANY, "Konfiguration bearbeiten", wxDefaultPosition, wxSize(520,320), wxDEFAULT_DIALOG_STYLE|wxRESIZE_BORDER)
+ConfigEditorDlg::ConfigEditorDlg(wxWindow* parent, AppConfig& cfg)
+: wxDialog(parent, wxID_ANY, "Schwellen bearbeiten", wxDefaultPosition, wxSize(420, 320))
 , cfg_(cfg)
 {
     auto* root = new wxBoxSizer(wxVERTICAL);
-    auto row = [&](const wxString& label, wxTextCtrl*& ctrl, const wxString& val){
-        auto* hz = new wxBoxSizer(wxHORIZONTAL);
-        hz->Add(new wxStaticText(this, wxID_ANY, label), 0, wxALIGN_CENTER_VERTICAL|wxRIGHT, 8);
-        ctrl = new wxTextCtrl(this, wxID_ANY, val);
-        hz->Add(ctrl, 1, wxEXPAND);
-        root->Add(hz, 0, wxEXPAND|wxALL, 6);
-    };
 
     double hours = cfg_.test_duration_sec / 3600.0;
-    row("Testdauer [h]", test_duration_h_, wxString::Format("%.1f", hours));
-    row("PosSchwelle [V, V]", pos_thr_, Arr2Str(cfg_.redlab_pos_threshold));
-    row("NegSchwelle [V, V]", neg_thr_, Arr2Str(cfg_.redlab_neg_threshold));
-    row("Präsenzstrom [mA, mA]", pres_thr_, Arr2Str(cfg_.presence_current_threshold));
-    row("Versorgungsspannung [V, V]", supply_thr_, Arr2Str(cfg_.supply_voltage_threshold));
 
-    auto* btns = CreateSeparatedButtonSizer(wxOK|wxCANCEL);
-    root->Add(btns, 0, wxEXPAND|wxALL, 6);
+    t_hours_     = new wxTextCtrl(this, wxID_ANY, wxString::Format("%.2f", hours));
+    t_pos_lo_    = new wxTextCtrl(this, wxID_ANY, wxString::Format("%.2f", cfg_.redlab_pos_threshold[0]));
+    t_pos_hi_    = new wxTextCtrl(this, wxID_ANY, wxString::Format("%.2f", cfg_.redlab_pos_threshold[1]));
+    t_neg_lo_    = new wxTextCtrl(this, wxID_ANY, wxString::Format("%.2f", cfg_.redlab_neg_threshold[0]));
+    t_neg_hi_    = new wxTextCtrl(this, wxID_ANY, wxString::Format("%.2f", cfg_.redlab_neg_threshold[1]));
+    t_supply_lo_ = new wxTextCtrl(this, wxID_ANY, wxString::Format("%.2f", cfg_.supply_voltage_threshold[0]));
+    t_supply_hi_ = new wxTextCtrl(this, wxID_ANY, wxString::Format("%.2f", cfg_.supply_voltage_threshold[1]));
 
-    Bind(wxEVT_BUTTON, &ConfigEditorDlg::OnSave, this, wxID_OK);
-
-    SetSizerAndFit(root);
-    CentreOnParent();
-}
-
-std::string ConfigEditorDlg::Arr2Str(const double a[2]){
-    std::ostringstream os; os<<a[0]<<", "<<a[1]; return os.str();
-}
-
-bool ConfigEditorDlg::ParsePair(const wxString& s, double out[2], wxString* err){
-    double a,b; char c;
-    std::string str = s.ToStdString();
-    std::istringstream is(str);
-    if(!(is>>a)) { if(err) *err="Zahl erwartet"; return false; }
-    if(!(is>>c)) { if(err) *err="Komma/Trenner fehlt"; return false; }
-    if(!(is>>b)) { if(err) *err="zweite Zahl erwartet"; return false; }
-    out[0]=a; out[1]=b; return true;
-}
-
-void ConfigEditorDlg::OnSave(wxCommandEvent&){
-    // Validierung & Übernahme
-    double hours;
-    if(!test_duration_h_->GetValue().ToDouble(&hours) || hours<=0){
-        wxMessageBox("Ungültige Testdauer.", "Fehler", wxICON_ERROR); return;
-    }
-    cfg_.test_duration_sec = static_cast<int>(hours*3600.0);
-
-    auto try_pair = [&](wxTextCtrl* ctrl, double out[2], const char* what){
-        wxString err;
-        if(!ParsePair(ctrl->GetValue(), out, &err)){
-            wxMessageBox(wxString::Format("%s: %s", what, err), "Fehler", wxICON_ERROR);
-            throw 1;
-        }
+    auto addRow = [&](const char* label, wxTextCtrl* ctrl){
+        auto* row = new wxBoxSizer(wxHORIZONTAL);
+        row->Add(new wxStaticText(this, wxID_ANY, label), 0, wxRIGHT|wxALIGN_CENTER_VERTICAL, 6);
+        row->Add(ctrl, 1);
+        root->Add(row, 0, wxEXPAND|wxALL, 4);
     };
 
-    try {
-        try_pair(pos_thr_, cfg_.redlab_pos_threshold, "PosSchwelle");
-        try_pair(neg_thr_, cfg_.redlab_neg_threshold, "NegSchwelle");
-        try_pair(pres_thr_, cfg_.presence_current_threshold, "Präsenzstrom");
-        try_pair(supply_thr_, cfg_.supply_voltage_threshold, "Versorgung");
-    } catch(...) { return; }
+    addRow("Dauer [h]", t_hours_);
+    addRow("Pos-Lo [V]", t_pos_lo_);
+    addRow("Pos-Hi [V]", t_pos_hi_);
+    addRow("Neg-Lo [V]", t_neg_lo_);
+    addRow("Neg-Hi [V]", t_neg_hi_);
+    addRow("Supply-Lo [V]", t_supply_lo_);
+    addRow("Supply-Hi [V]", t_supply_hi_);
+
+    auto* buttons = new wxBoxSizer(wxHORIZONTAL);
+    auto* ok = new wxButton(this, wxID_OK, "Speichern");
+    auto* cancel = new wxButton(this, wxID_CANCEL, "Abbrechen");
+    buttons->Add(ok, 0, wxRIGHT, 6);
+    buttons->Add(cancel, 0);
+
+    root->Add(buttons, 0, wxALIGN_RIGHT|wxALL, 6);
+    SetSizerAndFit(root);
+
+    ok->Bind(wxEVT_BUTTON, &ConfigEditorDlg::OnSave, this);
+}
+
+void ConfigEditorDlg::OnSave(wxCommandEvent&) {
+    double hours = 0.0;
+    t_hours_->GetValue().ToDouble(&hours);
+    cfg_.test_duration_sec = static_cast<int>(hours * 3600.0);
+
+    auto parse = [&](wxTextCtrl* t, double& out){
+        double v = 0.0; t->GetValue().ToDouble(&v); out = v;
+    };
+    parse(t_pos_lo_,    cfg_.redlab_pos_threshold[0]);
+    parse(t_pos_hi_,    cfg_.redlab_pos_threshold[1]);
+    parse(t_neg_lo_,    cfg_.redlab_neg_threshold[0]);
+    parse(t_neg_hi_,    cfg_.redlab_neg_threshold[1]);
+    parse(t_supply_lo_, cfg_.supply_voltage_threshold[0]);
+    parse(t_supply_hi_, cfg_.supply_voltage_threshold[1]);
 
     EndModal(wxID_OK);
 }

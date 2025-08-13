@@ -130,9 +130,10 @@ void ChannelWidget::UpdateFrom(const SensorData& d){
     led_->Set(c);
 
     // Fehlerzähler
-    err_supply_->SetLabel(wxString::Format("%d", d.supply_err_cnt));
-    err_signal_->SetLabel(wxString::Format("%d", d.signal_err_cnt));
-    err_current_->SetLabel(wxString::Format("%d", d.current_err_cnt));
+    err_supply_->SetLabel(wxString::Format("%d", d.supply_error_counter));
+    err_signal_->SetLabel(wxString::Format("%d", d.signal_error_counter));
+    err_current_->SetLabel(wxString::Format("%d", d.current_error_counter));
+
 
     // SN übernehmen
     app_->serial_numbers[d.channel] = sn_->GetValue().ToStdString();

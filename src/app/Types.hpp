@@ -3,13 +3,21 @@
 
 struct SensorData {
     int   channel = 0;
-    float bus_voltage = 0.0f;   // V
-    float current     = 0.0f;   // mA
-    float power       = 0.0f;   // mW
-    float redlab_signal = 0.0f; // V
-    bool  present     = false;
-    bool  supply_ok   = false;
-    int   supply_error_counter = 0;
-    bool  signal_ok   = false;
-    int   signal_error_counter = 0;
+
+    // Messwerte
+    float bus_V        = 0.0f;   // Versorgungsspannung [V]
+    float current_mA   = 0.0f;   // Strom [mA]
+    float power_mW     = 0.0f;   // Leistung [mW]
+    float redlab_V     = 0.0f;   // RedLab-Signal [V]
+
+    // Zustände
+    bool  present      = false;
+    bool  supply_ok    = false;
+    bool  signal_ok    = false;
+    bool  current_ok   = false;
+
+    // Fehlerzähler
+    int   supply_error_counter  = 0;
+    int   signal_error_counter  = 0;
+    int   current_error_counter = 0;
 };
