@@ -15,7 +15,7 @@ wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
 wxEND_EVENT_TABLE()
 
 MainFrame::MainFrame(SoSeStaApp* app)
-: wxFrame(nullptr, wxID_ANY, wxString::FromUTF8(u8"SoSeSta – Prüfstation (wx)"),
+: wxFrame(nullptr, wxID_ANY, wxString::FromUTF8("SoSeSta – Prüfstation (wx)"),
           wxDefaultPosition, wxSize(1280,800))
 , app_(app), test_duration_sec_(app->config.test_duration_sec)
 , ui_timer_(this, 1000), toggle_timer_(this, 1001)
@@ -28,7 +28,7 @@ MainFrame::MainFrame(SoSeStaApp* app)
     
     channels_panel_ = new wxPanel(this);
     BuildChannels(channels_panel_);
-    root->Add(channels_panel_, 1, wxEXPAND|wxLEFT|wxRIGHT, 6); // mehr Anteil für Kanäle
+    root->Add(channels_panel_, 1, wxEXPAND|wxLEFT|wxRIGHT, 6); 
 
     auto* ctrl = new wxPanel(this);
     BuildControls(ctrl);
@@ -36,7 +36,7 @@ MainFrame::MainFrame(SoSeStaApp* app)
     
     auto* err = new wxPanel(this);
     BuildErrors(err);
-    root->Add(err, 2, wxEXPAND|wxALL, 6); // Log ~1/3 weniger Höhe (vorher 2)
+    root->Add(err, 2, wxEXPAND|wxALL, 6); 
 
     SetSizer(root);
     CentreOnScreen();
@@ -46,7 +46,7 @@ MainFrame::MainFrame(SoSeStaApp* app)
 
 void MainFrame::BuildConfigDisplay(wxWindow* parent){
     auto* s = new wxBoxSizer(wxHORIZONTAL);
-    auto* box = new wxStaticBoxSizer(wxVERTICAL, parent, wxString::FromUTF8(u8"Aktuelle Konfiguration"));
+    auto* box = new wxStaticBoxSizer(wxVERTICAL, parent, wxString::FromUTF8("Aktuelle Konfiguration"));
 
     // zwei Zeilen Text
     cfg_text_line1_ = new wxStaticText(parent, wxID_ANY, "");
@@ -55,10 +55,10 @@ void MainFrame::BuildConfigDisplay(wxWindow* parent){
 
     // Buttons rechts
     auto* btnRow = new wxBoxSizer(wxHORIZONTAL);
-    edit_btn_ = new wxButton(parent, wxID_ANY, wxString::FromUTF8(u8"⚙️ Schwellen bearbeiten"));
+    edit_btn_ = new wxButton(parent, wxID_ANY, wxString::FromUTF8("⚙️ Schwellen bearbeiten"));
     edit_btn_->Bind(wxEVT_BUTTON, [this](wxCommandEvent&){ OpenConfigEditor(); });
 
-    font_btn_ = new wxButton(parent, wxID_ANY, wxString::FromUTF8(u8"🔤 Schriftgröße…"));
+    font_btn_ = new wxButton(parent, wxID_ANY, wxString::FromUTF8("🔤 Schriftgröße…"));
     font_btn_->Bind(wxEVT_BUTTON, &MainFrame::OnChangeFont, this);
 
     btnRow->Add(edit_btn_, 0, wxRIGHT, 8);
@@ -116,9 +116,9 @@ void MainFrame::OnChangeFont(wxCommandEvent&) {
     if (cfg_text_line1_) currentPt = std::max(6, cfg_text_line1_->GetFont().GetPointSize());
 
     wxNumberEntryDialog dlg(this,
-        wxString::FromUTF8(u8"Neue Schriftgröße in Punkt (6–32):"),
-        wxString::FromUTF8(u8"Schriftgröße"),
-        wxString::FromUTF8(u8"Schriftgröße ändern"),
+        wxString::FromUTF8("Neue Schriftgröße in Punkt (6–32):"),
+        wxString::FromUTF8("Schriftgröße"),
+        wxString::FromUTF8("Schriftgröße ändern"),
         currentPt, 6, 32);
 
     if (dlg.ShowModal() == wxID_OK) {
@@ -162,7 +162,7 @@ void MainFrame::BuildChannels(wxWindow* parent){
 
 void MainFrame::BuildErrors(wxWindow* parent){
     auto* root = new wxBoxSizer(wxVERTICAL);
-    auto* box  = new wxStaticBoxSizer(wxVERTICAL, parent, wxString::FromUTF8(u8"Ereignis-Log (Fehlerübersicht)"));
+    auto* box  = new wxStaticBoxSizer(wxVERTICAL, parent, wxString::FromUTF8("Ereignis-Log (Fehlerübersicht)"));
 
     // Toolbar
     auto* toolbar = new wxBoxSizer(wxHORIZONTAL);
@@ -195,10 +195,10 @@ void MainFrame::BuildErrors(wxWindow* parent){
 
 void MainFrame::BuildControls(wxWindow* parent){
     auto* s = new wxBoxSizer(wxHORIZONTAL);
-    btn_toggle_  = new wxButton(parent, wxID_ANY, wxString::FromUTF8(u8"🔁 Relais toggeln"));
-    btn_start_   = new wxButton(parent, wxID_ANY, wxString::FromUTF8(u8"▶️ Start Test"));
-    btn_stop_    = new wxButton(parent, wxID_ANY, wxString::FromUTF8(u8"⏹ Stop Test"));
-    btn_archive_ = new wxButton(parent, wxID_ANY, wxString::FromUTF8(u8"📂 Archiv öffnen"));
+    btn_toggle_  = new wxButton(parent, wxID_ANY, wxString::FromUTF8("🔁 Relais toggeln"));
+    btn_start_   = new wxButton(parent, wxID_ANY, wxString::FromUTF8("▶️ Start Test"));
+    btn_stop_    = new wxButton(parent, wxID_ANY, wxString::FromUTF8("⏹ Stop Test"));
+    btn_archive_ = new wxButton(parent, wxID_ANY, wxString::FromUTF8("📂 Archiv öffnen"));
     timer_label_ = new wxStaticText(parent, wxID_ANY, "00:00:00");
 
     btn_stop_->Enable(false);
@@ -219,7 +219,7 @@ void MainFrame::BuildControls(wxWindow* parent){
 }
 
 void MainFrame::OnToggle(wxCommandEvent&){
-    if (wxMessageBox(wxString::FromUTF8(u8"Relais manuell toggeln? Nur bei Bedarf."),
+    if (wxMessageBox(wxString::FromUTF8("Relais manuell toggeln? Nur bei Bedarf."),
                      "Sicherheitsabfrage", wxYES_NO|wxICON_WARNING) != wxYES)
         return;
     app_->hw->Relays().ToggleAll();
@@ -394,14 +394,14 @@ void MainFrame::LogEvent(const wxString& when, int ch, const wxString& sn,
 }
 
 void MainFrame::ExportErrorsCSV(){
-    wxFileDialog dlg(this, wxString::FromUTF8(u8"CSV exportieren"), "", "ereignis_log.csv",
+    wxFileDialog dlg(this, wxString::FromUTF8("CSV exportieren"), "", "ereignis_log.csv",
         "CSV Dateien (*.csv)|*.csv", wxFD_SAVE|wxFD_OVERWRITE_PROMPT);
     if (dlg.ShowModal()!=wxID_OK) return;
 
     // Binär öffnen + BOM (Excel-freundlich)
     wxFFile f(dlg.GetPath(), "wb");
     if (!f.IsOpened()){
-        wxMessageBox(wxString::FromUTF8(u8"Datei konnte nicht geschrieben werden."), "Fehler", wxICON_ERROR);
+        wxMessageBox(wxString::FromUTF8("Datei konnte nicht geschrieben werden."), "Fehler", wxICON_ERROR);
         return;
     }
     static const unsigned char bom[3] = {0xEF,0xBB,0xBF};

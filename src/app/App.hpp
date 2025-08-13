@@ -5,6 +5,9 @@
 #include <vector>
 #include <chrono>
 
+#include "app/Types.hpp"
+
+
 struct Config {
     int    test_duration_sec   = 2 * 60 * 60;           // 2h
     int    update_interval_ms  = 300;                   // GUI Refresh
@@ -16,22 +19,6 @@ struct Config {
     // frei für weitere Werte (current_threshold etc.)
 };
 
-struct SensorData {
-    int channel = 0;
-    bool present = true;
-    bool supply_ok = true;
-    bool signal_ok = true;
-    bool current_ok = true;
-    double current_mA = 0.0;
-    double bus_V = 0.0;
-    double redlab_V = 0.0;
-
-    int supply_err_cnt = 0;
-    int signal_err_cnt = 0;
-    int current_err_cnt = 0;
-
-    std::string serial_number;
-};
 
 struct RelaysIface {
     virtual ~RelaysIface() = default;

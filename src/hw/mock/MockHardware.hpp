@@ -48,7 +48,7 @@ public:
         double redlab_sigma_V   = 1.2;           // ±1.2 V
     };
 
-    explicit MockHardware(const AppConfigView& cfg, const Options& opt = {})
+    explicit MockHardware(const AppConfigView& cfg, Options opt = {});
     : cfg_(cfg),
       sensors_(opt.num_channels ? opt.num_channels : kNumChannels),
       rng_(opt.seed ? opt.seed : std::random_device{}()),

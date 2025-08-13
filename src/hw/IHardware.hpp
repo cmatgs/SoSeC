@@ -1,33 +1,9 @@
 #pragma once
 #include <string>
 #include <vector>
-
+#include "app/Types.hpp"
 // 8 Kanäle gesamt
 constexpr int kNumChannels = 8;
-
-struct SensorData {
-    int channel = 0;
-
-    // Messwerte
-    double bus_V      = 0.0;   // INA219 Busspannung
-    double current_mA = 0.0;   // INA219 Strom
-    double power_mW   = 0.0;   // INA219 Leistung
-    double redlab_V   = 0.0;   // RedLab Spannung
-
-    // Meta
-    bool present   = false;
-    std::string serial_number;
-
-    // Status
-    bool supply_ok  = false;
-    bool signal_ok  = false;
-    bool current_ok = false;
-
-    // Zähler
-    int supply_err_cnt  = 0;
-    int signal_err_cnt  = 0;
-    int current_err_cnt = 0;
-};
 
 struct IRelays {
     virtual ~IRelays() = default;

@@ -1,0 +1,5 @@
+# ninja log v7
+77	1993	7767764553506017	CMakeFiles/sosesta.dir/src/hw/mock/MockHardware.cpp.obj	c3eb3c17ea898107
+13	5044	7767764552858183	CMakeFiles/sosesta.dir/src/app/App.cpp.obj	111b5117d13376c7
+47	5392	7767764553207016	CMakeFiles/sosesta.dir/src/gui/ConfigEditor.cpp.obj	7f064385d9e8352
+35	5514	7767764553077448	CMakeFiles/sosesta.dir/src/gui/ChannelWidget.cpp.obj	221915685762e81f
