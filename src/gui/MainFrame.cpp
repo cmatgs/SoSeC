@@ -24,19 +24,19 @@ MainFrame::MainFrame(SoSeStaApp* app)
 
     auto* cfg = new wxPanel(this);
     BuildConfigDisplay(cfg);
-    root->Add(cfg, 0, wxEXPAND|wxALL, 6);
-
+    root->Add(cfg, 1, wxEXPAND|wxALL, 6);
+    
     channels_panel_ = new wxPanel(this);
     BuildChannels(channels_panel_);
-    root->Add(channels_panel_, 2, wxEXPAND|wxLEFT|wxRIGHT, 6); // mehr Anteil für Kanäle
-
-    auto* err = new wxPanel(this);
-    BuildErrors(err);
-    root->Add(err, 1, wxEXPAND|wxALL, 6); // Log ~1/3 weniger Höhe (vorher 2)
+    root->Add(channels_panel_, 1, wxEXPAND|wxLEFT|wxRIGHT, 6); // mehr Anteil für Kanäle
 
     auto* ctrl = new wxPanel(this);
     BuildControls(ctrl);
     root->Add(ctrl, 0, wxEXPAND|wxALL, 6);
+    
+    auto* err = new wxPanel(this);
+    BuildErrors(err);
+    root->Add(err, 2, wxEXPAND|wxALL, 6); // Log ~1/3 weniger Höhe (vorher 2)
 
     SetSizer(root);
     CentreOnScreen();
