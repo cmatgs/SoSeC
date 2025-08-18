@@ -74,9 +74,6 @@ include(${wxWidgets_USE_FILE})
 
 # Kern-Quellen (plattformunabhängig)
 set(SOSESTA_CORE_SRCS
-  # Main
-  src/main.cpp
-
   # App
   src/app/core/App.cpp
   src/app/core/State.cpp
