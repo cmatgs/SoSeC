@@ -20,8 +20,7 @@ CMAKE_ADDR2LINE:FILEPATH=C:/msys64/ucrt64/bin/addr2line.exe
 //Path to a program.
 CMAKE_AR:FILEPATH=C:/msys64/ucrt64/bin/ar.exe
 
-//Choose the type of build, options are: None Debug Release RelWithDebInfo
-// MinSizeRel ...
+//Build type
 CMAKE_BUILD_TYPE:STRING=Release
 
 //CXX compiler
@@ -243,7 +242,7 @@ SoSeSta_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 SoSeSta_SOURCE_DIR:STATIC=C:/Users/cmueller/Documents/GitHub/SoSeC
 
-//Location of wxWidgets library configuration provider binary (wx-config).
+//Path to wx-config
 wxWidgets_CONFIG_EXECUTABLE:FILEPATH=C:/msys64/ucrt64/bin/wx-config
 
 //Cleared.

@@ -1,6 +1,9 @@
 #pragma once
-#include "hw/IHardware.hpp"
 #include <memory>
+#include "hw/IHardware.hpp"
+#include "config/ConfigSoftware.hpp"   // ConfigSoftwareView
+#include "config/ConfigHardware.hpp"   // falls benötigt (hier ungenutzt im Mock)
 
-// Liefert je nach Compile-Time-Schalter USE_MOCK eine Real- oder Mock-Implementierung.
-std::unique_ptr<IHardware> MakeHardware(const AppConfigView& cfg);
+std::shared_ptr<sosesta::hw::IHardware> MakeHardware(
+    const ConfigSoftwareView& cfg_view,
+    const ConfigHardware&     hw_cfg);

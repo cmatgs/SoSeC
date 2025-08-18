@@ -1,34 +1,40 @@
+// src/hw/IHardware.hpp
 #pragma once
-#include <string>
 #include <vector>
-#include "app/Types.hpp"
-// 8 Kanäle gesamt
-constexpr int kNumChannels = 8;
+#include "app/data/SensorData.hpp"
 
-struct IRelays {
-    virtual ~IRelays() = default;
-    virtual void ToggleAll() = 0;
-    virtual bool GetState(int idx) const = 0; // 0..3
-};
+namespace sosesta::hw
+{
 
-struct IHardware {
+/**
+ * @brief Schnittstelle für alle Hardware-Implementierungen.
+ *
+ * Diese Schnittstelle ist plattformunabhängig und kennt keine Details
+ * zu konkreten Config-Strukturen. Implementierungen (Mock oder Real)
+ * können im Konstruktor beliebige Parameter entgegennehmen.
+ */
+class IHardware
+{
+public:
     virtual ~IHardware() = default;
-    virtual void UpdateSensors() = 0;
-    virtual const std::vector<SensorData>& Sensors() const = 0;
-    virtual IRelays& Relays() = 0;
+
+    /// Initialisiert die Hardware (z. B. I2C, GPIO, DAQ)
+    virtual void Initialize() = 0;
+
+    /// Fährt die Hardware sauber herunter
+    virtual void Shutdown() = 0;
+
+    /// Liest alle Sensordaten in den übergebenen Vektor
+    virtual void UpdateSensors(std::vector<SensorData>& sensors) = 0;
+
+    /// Schaltet ein bestimmtes Relais ein/aus
+    virtual void ToggleRelay(int channel, bool state) = 0;
+
+    /// Schaltet alle Relais ein
+    virtual void TurnAllRelaysOn() = 0;
+
+    /// Schaltet alle Relais aus
+    virtual void TurnAllRelaysOff() = 0;
 };
 
-// Minimaler Blick auf AppConfig – wir lesen nur Grenzwerte, die du schon nutzt
-struct AppConfigView {
-    double redlab_pos_threshold[2]       = { 2.0,  5.0 };   ///< Positivbereich RedLab-Signal [V]
-    double redlab_neg_threshold[2]       = {-5.0, -2.0 };   ///< Negativbereich RedLab-Signal [V]
-
-    // Bereich der Leerlaufspannung am RedLab, 1.3–1.6 V
-    double redlab_idle_voltage_range[2]  = { 1.3, 1.6 };    ///< V
-
-    double supply_voltage_threshold[2]   = { 4.7,  5.5 };   ///< Versorgungsspannung [V]
-    double max_current_mA                = 25.0;            ///< mA
-
-    int toggle_interval_sec              = 600;             ///< 10 Minuten in Sekunden
-    int test_interval_sec                = 5;               ///< Standard-Testintervall [s]
-};
+} // namespace sosesta::hw

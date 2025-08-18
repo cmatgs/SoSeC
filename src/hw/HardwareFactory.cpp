@@ -1,16 +1,18 @@
 #include "hw/HardwareFactory.hpp"
 
-#ifdef USE_MOCK
+#if defined(USE_MOCK)
   #include "hw/mock/MockHardware.hpp"
 #else
-  #include "hw/RealHardware.hpp"
+  #include "hw/real/RealHardware.hpp" 
 #endif
 
-std::unique_ptr<IHardware> MakeHardware(const AppConfigView& cfg) {
-#ifdef USE_MOCK
-    return std::make_unique<MockHardware>(cfg);               // ggf. Mock-Options hier
+std::shared_ptr<sosesta::hw::IHardware> MakeHardware(
+    const ConfigSoftwareView& cfg_view,
+    const ConfigHardware&     /*hw_cfg*/)
+{
+#if defined(USE_MOCK)
+    return std::make_shared<sosesta::hw::MockHardware>(cfg_view);
 #else
-    return std::make_unique<RealHardware>(cfg);
+    return std::make_shared<sosesta::hw::RealHardware>(/* cfg_view, hw_cfg */);
 #endif
 }
-    

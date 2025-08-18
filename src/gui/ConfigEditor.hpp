@@ -1,22 +1,26 @@
 #pragma once
 #include <wx/wx.h>
-
-// Vorwärtsdeklaration, damit kein Zyklus entsteht:
-struct AppConfig;
+#include "config/ConfigSoftware.hpp"
 
 class ConfigEditorDlg : public wxDialog {
 public:
-    ConfigEditorDlg(wxWindow* parent, AppConfig& cfg);
+    ConfigEditorDlg(wxWindow* parent, ConfigSoftware& cfg);
 
 private:
-    AppConfig& cfg_;
-    wxTextCtrl* t_hours_ = nullptr;
-    wxTextCtrl* t_pos_lo_= nullptr;
-    wxTextCtrl* t_pos_hi_= nullptr;
-    wxTextCtrl* t_neg_lo_= nullptr;
-    wxTextCtrl* t_neg_hi_= nullptr;
+    void OnSave(wxCommandEvent&);
+
+    ConfigSoftware& cfg_;
+
+    wxTextCtrl* t_hours_    = nullptr;
+    wxTextCtrl* t_pos_lo_   = nullptr;
+    wxTextCtrl* t_pos_hi_   = nullptr;
+    wxTextCtrl* t_neg_lo_   = nullptr;
+    wxTextCtrl* t_neg_hi_   = nullptr;
     wxTextCtrl* t_supply_lo_= nullptr;
     wxTextCtrl* t_supply_hi_= nullptr;
+    wxTextCtrl* t_curr_min_ = nullptr;
+    wxTextCtrl* t_curr_max_ = nullptr;
 
-    void OnSave(wxCommandEvent&);
+    // NEU:
+    wxTextCtrl* t_imax_     = nullptr;
 };

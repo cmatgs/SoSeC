@@ -45,9 +45,9 @@ void RealHardware::UpdateLedsFromSeverity(const std::vector<double>& sev) {
 // ----- Konstruktor / Destruktor -----
 RealHardware::RealHardware(const AppConfigView& cfg, int led_pin, int led_channel, int led_count)
 : cfg_(cfg),
-  // RelayController: Pins aus deiner AppConfig ziehen oder hier fixen
+  // RelayController: Pins aus AppConfig 
   relays_({ .chip_path="/dev/gpiochip0",
-            .pins = {14, 15, 24, 23}, // ACHTUNG: 18 freigehalten für WS281x
+            .pins = {14, 15, 24, 23}, // ACHTUNG: 18 freigehalten für WS281x <<-- HARDWARE ÄNDERN
             .active_high = true,
             .initial_on = false,
             .consumer   = "sosesta-relay" }),

@@ -1,11 +1,11 @@
-#include "MainFrame.hpp"
-#include "ConfigEditor.hpp"
+#include "gui/MainFrame.hpp"
+#include "gui/ConfigEditor.hpp"
 
-#include <wx/numdlg.h>   // wxNumberEntryDialog
+#include <wx/numdlg.h>
 #include <wx/sizer.h>
 #include <wx/filefn.h>
 #include <wx/statline.h>
-#include <wx/ffile.h>    // wxFFile (CSV)
+#include <wx/ffile.h>
 #include <wx/datetime.h>
 #include <algorithm>
 
@@ -14,43 +14,52 @@ wxBEGIN_EVENT_TABLE(MainFrame, wxFrame)
     EVT_TIMER(1001, MainFrame::OnToggleTick)
 wxEND_EVENT_TABLE()
 
-MainFrame::MainFrame(SoSeStaApp* app)
-: wxFrame(nullptr, wxID_ANY, wxString::FromUTF8("SoSeSta – Prüfstation (wx)"),
+MainFrame::MainFrame(wxWindow* parent, ConfigSoftware& cfg)
+: wxFrame(parent, wxID_ANY, wxString::FromUTF8("SoSeSta – Prüfstation (wx)"),
           wxDefaultPosition, wxSize(1280,800))
-, app_(app), test_duration_sec_(app->config.test_duration_sec)
-, ui_timer_(this, 1000), toggle_timer_(this, 1001)
+, cfg_(cfg)
+, logger_()
+, exporter_(logger_)
+, test_runner_(cfg_, logger_)
+, ui_timer_(this, 1000)
+, toggle_timer_(this, 1001)
 {
     auto* root = new wxBoxSizer(wxVERTICAL);
 
-    auto* cfg = new wxPanel(this);
-    BuildConfigDisplay(cfg);
-    root->Add(cfg, 1, wxEXPAND|wxALL, 6);
-    
+    auto* cfgp = new wxPanel(this);
+    BuildConfigDisplay(cfgp);
+    root->Add(cfgp, 0, wxEXPAND|wxALL, 6);
+
     channels_panel_ = new wxPanel(this);
     BuildChannels(channels_panel_);
-    root->Add(channels_panel_, 1, wxEXPAND|wxLEFT|wxRIGHT, 6); 
+    root->Add(channels_panel_, 1, wxEXPAND|wxLEFT|wxRIGHT, 6);
 
     auto* ctrl = new wxPanel(this);
     BuildControls(ctrl);
     root->Add(ctrl, 0, wxEXPAND|wxALL, 6);
-    
+
     auto* err = new wxPanel(this);
     BuildErrors(err);
-    root->Add(err, 2, wxEXPAND|wxALL, 6); 
+    root->Add(err, 2, wxEXPAND|wxALL, 6);
 
     SetSizer(root);
     CentreOnScreen();
 
-    ui_timer_.Start(app_->config.update_interval_ms);
+    test_duration_sec_ = cfg_.test_duration_sec;
+    ui_timer_.Start(std::max(50, cfg_.update_interval_ms));
 }
 
-void MainFrame::BuildConfigDisplay(wxWindow* parent){
+void MainFrame::AttachHardware(const std::shared_ptr<sosesta::hw::IHardware>& hw) {
+    test_runner_.SetHardware(hw);
+    test_runner_.Start();
+}
+
+void MainFrame::BuildConfigDisplay(wxWindow* parent) {
     auto* s = new wxBoxSizer(wxHORIZONTAL);
     auto* box = new wxStaticBoxSizer(wxVERTICAL, parent, wxString::FromUTF8("Aktuelle Konfiguration"));
 
-    // zwei Zeilen Text
+    // eine Zeile Text
     cfg_text_line1_ = new wxStaticText(parent, wxID_ANY, "");
-    cfg_text_line2_ = new wxStaticText(parent, wxID_ANY, "");
     RefreshConfigLabel();
 
     // Buttons rechts
@@ -64,50 +73,40 @@ void MainFrame::BuildConfigDisplay(wxWindow* parent){
     btnRow->Add(edit_btn_, 0, wxRIGHT, 8);
     btnRow->Add(font_btn_, 0);
 
-    // links (2 Zeilen), rechts (Buttons)
+    // links (nur 1 Zeile), rechts (Buttons)
     auto* row = new wxBoxSizer(wxHORIZONTAL);
-    auto* left = new wxBoxSizer(wxVERTICAL);
-    left->Add(cfg_text_line1_, 0, wxBOTTOM, 2);
-    left->Add(cfg_text_line2_, 0);
-
-    row->Add(left, 1, wxALIGN_CENTER_VERTICAL|wxRIGHT, 8);
+    row->Add(cfg_text_line1_, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, 8);
     row->Add(btnRow, 0, wxALIGN_CENTER_VERTICAL);
 
-    box->Add(row, 0, wxEXPAND|wxALL, 8);
-    s->Add(box, 1, wxEXPAND|wxALL, 0);
+    box->Add(row, 0, wxEXPAND | wxALL, 8);
+    s->Add(box, 1, wxEXPAND | wxALL, 0);
     parent->SetSizerAndFit(s);
 
     // Wrap bei Größenänderung
     parent->Bind(wxEVT_SIZE, [this](wxSizeEvent& e){
         e.Skip();
-        if (!cfg_text_line1_ || !cfg_text_line2_) return;
-        // Platz für Buttons berücksichtigen (Schätzwert)
+        if (!cfg_text_line1_) return;
         int total = cfg_text_line1_->GetParent()->GetClientSize().GetWidth();
-        int wrapW = std::max(200, total - 260);
+        int wrapW = std::max(200, total - 260); // Platz für Buttons berücksichtigen
         cfg_text_line1_->Wrap(wrapW);
-        cfg_text_line2_->Wrap(wrapW);
     });
 }
 
+
 void MainFrame::RefreshConfigLabel(){
-    const auto& c = app_->config;
-    wxString l1, l2;
-
-    l1 << wxString::FromUTF8(u8"Dauer: ")
-       << wxString::Format("%.1f h    ", c.test_duration_sec/3600.0)
-       << wxString::FromUTF8(u8"PosSchwelle: ")
-       << wxString::Format("[%.2f, %.2f] V    ", c.redlab_pos_threshold[0], c.redlab_pos_threshold[1])
-       << wxString::FromUTF8(u8"NegSchwelle: ")
-       << wxString::Format("[%.2f, %.2f] V", c.redlab_neg_threshold[0], c.redlab_neg_threshold[1]);
-
-    l2 << wxString::FromUTF8(u8"Präsenzstrom: ")
-       << wxString::Format("[%.2f, %.2f] mA    ", c.presence_current_threshold[0], c.presence_current_threshold[1])
-       << wxString::FromUTF8(u8"Versorgung: ")
-       << wxString::Format("[%.2f, %.2f] V", c.supply_voltage_threshold[0], c.supply_voltage_threshold[1]);
-
-    if (cfg_text_line1_) cfg_text_line1_->SetLabel(l1);
-    if (cfg_text_line2_) cfg_text_line2_->SetLabel(l2);
+    const auto& c = cfg_;
+    if (cfg_text_line1_)
+        cfg_text_line1_->SetLabel(
+            wxString::FromUTF8("Dauer: ") << wxString::Format("%.1f h    ", c.test_duration_sec / 3600.0)
+            << wxString::FromUTF8("Maximalstrom: ") << wxString::Format("%.1f mA    ", c.max_current_mA)
+            << wxString::FromUTF8("PosSchwelle: ") << wxString::Format("[%.2f, %.2f] V    ", c.redlab_pos_threshold[0], c.redlab_pos_threshold[1])
+            << wxString::FromUTF8("NegSchwelle: ") << wxString::Format("[%.2f, %.2f] V    ", c.redlab_neg_threshold[0], c.redlab_neg_threshold[1])
+            << wxString::FromUTF8("Präsenzspannung: ") << wxString::Format("[%.2f, %.2f] mA    ", c.presence_current_threshold[0], c.presence_current_threshold[1])
+            << wxString::FromUTF8("Versorgung: ") << wxString::Format("[%.2f, %.2f] V", c.supply_voltage_threshold[0], c.supply_voltage_threshold[1])
+        );
 }
+
+
 
 // ───────────────────────────────────────────
 // Schriftgröße ändern (rekursiv)
@@ -146,16 +145,15 @@ void MainFrame::SetFontSizeRecursive(wxWindow* win, int ptSize) {
         SetFontSizeRecursive(child, ptSize);
     }
 }
-// ───────────────────────────────────────────
 
 void MainFrame::BuildChannels(wxWindow* parent){
-    auto* grid = new wxGridSizer(1, 8, 6, 6); // 1 Zeile, 8 Spalten
-    for(int i=0;i<8;++i){
-        auto* pane = new wxPanel(parent);
-        auto* sizer = new ChannelWidget(pane, i, app_);
+    auto* grid = new wxGridSizer(1, 8, 6, 6);
+    for (int i = 0; i < 8; ++i) {
+        auto* pane  = new wxPanel(parent);
+        auto* sizer = new ChannelWidget(pane, i, on_toggle_pair_, serial_numbers_);
+        channels[i] = sizer;
         pane->SetSizer(sizer);
         grid->Add(pane, 1, wxEXPAND);
-        channels[i] = sizer;
     }
     parent->SetSizer(grid);
 }
@@ -222,27 +220,32 @@ void MainFrame::OnToggle(wxCommandEvent&){
     if (wxMessageBox(wxString::FromUTF8("Relais manuell toggeln? Nur bei Bedarf."),
                      "Sicherheitsabfrage", wxYES_NO|wxICON_WARNING) != wxYES)
         return;
-    app_->hw->Relays().ToggleAll();
+
+    // aktuelle Architektur: alle Relais umlegen
+    test_runner_.ToggleRelays();
     relay_state_ = !relay_state_;
-    for(auto* w : channels) w->SetRelayState(relay_state_);
+    for(auto* w : channels) if (w) w->SetRelayState(relay_state_);
 }
 
 void MainFrame::OnStart(wxCommandEvent&){
     test_running_ = true;
     start_ts_ = std::chrono::system_clock::now();
-    test_duration_sec_ = app_->config.test_duration_sec;
+    test_duration_sec_ = cfg_.test_duration_sec;
 
     btn_start_->Enable(false);
     btn_stop_->Enable(true);
     btn_toggle_->Enable(false);
     btn_archive_->Enable(false);
-    for(auto* w : channels) w->DisableSerialInput();
+    for(auto* w : channels) if (w) w->DisableSerialInput();
 
-    app_->hw->Relays().ToggleAll();
-    relay_state_ = true;
-    for(auto* w : channels) w->SetRelayState(true);
+    // Start: Relais einmal einschalten
+    if (!relay_state_) {
+        test_runner_.ToggleRelays();
+        relay_state_ = true;
+        for(auto* w : channels) if (w) w->SetRelayState(true);
+    }
 
-    toggle_timer_.Start(app_->config.test_interval_sec * 1000);
+    toggle_timer_.Start(cfg_.test_interval_sec * 1000);
 }
 
 void MainFrame::OnStop(wxCommandEvent&){
@@ -267,7 +270,8 @@ void MainFrame::OnArchive(wxCommandEvent&){
 }
 
 void MainFrame::OnUiTick(wxTimerEvent&){
-    app_->hw->UpdateSensors();
+    // neue Sensorwerte holen
+    test_runner_.Step();
     UpdateChannels();
     UpdateErrors();
     UpdateTimer();
@@ -275,27 +279,35 @@ void MainFrame::OnUiTick(wxTimerEvent&){
 
 void MainFrame::OnToggleTick(wxTimerEvent&){
     if (!test_running_) return;
-    app_->hw->Relays().ToggleAll();
+    test_runner_.ToggleRelays();
     relay_state_ = !relay_state_;
-    for(auto* w : channels) w->SetRelayState(relay_state_);
+    for(auto* w : channels) if (w) w->SetRelayState(relay_state_);
 }
 
 void MainFrame::UpdateChannels(){
-    const auto& vec = app_->hw->Sensors();
-    for(size_t i=0;i<vec.size() && i<channels.size();++i){
-        channels[i]->UpdateFrom(vec[i]);
+    const auto& vec = test_runner_.Sensors();
+    const size_t n = std::min(vec.size(), channels.size());
+    for(size_t i=0;i<n;++i){
+        if (channels[i]) channels[i]->UpdateFrom(vec[i]);
     }
 }
 
 // Änderungen (OK↔Fehler) erkennen und protokollieren
 void MainFrame::UpdateErrors(){
-    const auto& S = app_->hw->Sensors();
+    const auto& S = test_runner_.Sensors();
+    if (S.empty()) return;
+
+    // Schwellwerte aus Config
+    const auto& c = cfg_;
 
     if (!prev_init_){
         for (size_t i=0;i<S.size() && i<8;++i){
             prev_supply_ok_[i] = S[i].supply_ok;
             prev_signal_ok_[i] = S[i].signal_ok;
-            prev_current_ok_[i]= S[i].current_ok;
+            // current_ok aus Stromfenster abgeleitet
+            const bool cur_ok = (S[i].current_mA >= c.presence_current_threshold[0] &&
+                                 S[i].current_mA <= c.presence_current_threshold[1]);
+            prev_current_ok_[i]= cur_ok;
         }
         prev_init_ = true;
         return;
@@ -305,17 +317,17 @@ void MainFrame::UpdateErrors(){
     for (size_t i=0;i<S.size() && i<8;++i){
         const auto& s = S[i];
 
-        wxString sn = app_->serial_numbers[i].empty()
+        wxString sn = serial_numbers_[i].empty()
                       ? wxString("-")
-                      : wxString::FromUTF8(app_->serial_numbers[i].c_str());
-        const wxString relay = app_->hw->Relays().GetState(int(i/2)) ? "ON" : "OFF";
+                      : wxString::FromUTF8(serial_numbers_[i].c_str());
+        const wxString relay = relay_state_ ? "ON" : "OFF";
 
         // Versorgung
         if (s.supply_ok != prev_supply_ok_[i]){
             if (!s.supply_ok){
                 LogEvent(now, int(i), sn, "Versorgung",
                          wxString::Format("V=%.2f außerhalb [%.2f, %.2f]",
-                             s.bus_V, app_->config.supply_voltage_threshold[0], app_->config.supply_voltage_threshold[1]),
+                             s.bus_V, c.supply_voltage_threshold[0], c.supply_voltage_threshold[1]),
                          relay, "ERROR");
             } else {
                 LogEvent(now, int(i), sn, "Versorgung", "wieder OK", relay, "OK");
@@ -329,8 +341,8 @@ void MainFrame::UpdateErrors(){
                 LogEvent(now, int(i), sn, "Signal",
                          wxString::Format("RedLab=%.2f außerhalb [%g,%g] / [%g,%g]",
                             s.redlab_V,
-                            app_->config.redlab_neg_threshold[0], app_->config.redlab_neg_threshold[1],
-                            app_->config.redlab_pos_threshold[0], app_->config.redlab_pos_threshold[1]),
+                            c.redlab_neg_threshold[0], c.redlab_neg_threshold[1],
+                            c.redlab_pos_threshold[0], c.redlab_pos_threshold[1]),
                          relay, "ERROR");
             } else {
                 LogEvent(now, int(i), sn, "Signal", "wieder OK", relay, "OK");
@@ -338,22 +350,24 @@ void MainFrame::UpdateErrors(){
             prev_signal_ok_[i] = s.signal_ok;
         }
 
-        // Strom
-        if (s.current_ok != prev_current_ok_[i]){
-            if (!s.current_ok){
+        // Strom → current_ok ableiten
+        const bool current_ok_now = (s.current_mA >= c.presence_current_threshold[0] &&
+                                     s.current_mA <= c.presence_current_threshold[1]);
+        if (current_ok_now != prev_current_ok_[i]){
+            if (!current_ok_now){
                 LogEvent(now, int(i), sn, "Strom",
-                         wxString::Format("I=%.2f mA außerhalb [%.2f, %.2f] mA",
-                             s.current_mA, app_->config.presence_current_threshold[0], app_->config.presence_current_threshold[1]),
+                         wxString::Format("I=%.2f mA jenseits [%.2f, %.2f] mA",
+                             s.current_mA, c.presence_current_threshold[0], c.presence_current_threshold[1]),
                          relay, "ERROR");
             } else {
                 LogEvent(now, int(i), sn, "Strom", "wieder OK", relay, "OK");
             }
-            prev_current_ok_[i] = s.current_ok;
+            prev_current_ok_[i] = current_ok_now;
         }
 
-        // Präsenz (optional)
+        // Präsenz (optional Hinweis)
         if (!s.present){
-            LogEvent(now, int(i), sn, "Präsenz", "Sensor nicht erkannt", relay, "WARN");
+            LogEvent(now, int(i), sn, "Sensor Erkannt", "Sensor nicht erkannt", relay, "WARN");
         }
     }
 }
@@ -420,8 +434,11 @@ void MainFrame::ExportErrorsCSV(){
 }
 
 void MainFrame::OpenConfigEditor(){
-    ConfigEditorDlg dlg(this, app_->config);
+    ConfigEditorDlg dlg(this, cfg_);
     if (dlg.ShowModal() == wxID_OK) {
         RefreshConfigLabel();
+        // ggf. Timer neu starten, falls Intervall geändert
+        if (ui_timer_.IsRunning()) ui_timer_.Stop();
+        ui_timer_.Start(std::max(50, cfg_.update_interval_ms));
     }
 }
