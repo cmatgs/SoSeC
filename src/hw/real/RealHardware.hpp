@@ -3,7 +3,7 @@
 #include "relays/RelayController.hpp"
 #include "daq/RedLabDAQ.hpp"
 #include "mux/TCA9548A.hpp"
-#include "power/INA219.hpp"
+#include "power/INA219.h"
 #include "leds/LEDStrip.hpp"
 #include <mutex>
 #include <optional>

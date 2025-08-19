@@ -1,4 +1,9 @@
 #include "hw/RealHardware.hpp"
+#include "hw/real/i2c/I2CBus.hpp"
+#include "hw/real/mux/TCA9548A.hpp"
+#include "hw/real/power/INA219.hpp"
+#include "hw/real/power/MuxedIna219.hpp"
+
 #include <algorithm>
 #include <string>
 

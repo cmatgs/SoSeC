@@ -13,6 +13,7 @@ bool App::OnInit() {
     hardware = MakeHardware(MakeConfigView(config_software), config_hardware);
 
     main_frame_ = new MainFrame(nullptr, config_software);
+    
     main_frame_->AttachHardware(hardware);
     main_frame_->Show(true);
     return true;

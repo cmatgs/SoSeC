@@ -1,70 +1,38 @@
+// hw/ina/INA219.hpp
 #pragma once
-#include <optional>
-#include <string>
-#include <tuple>
 #include <cstdint>
+#include <string>
 
-// regisin/ina219 C++-Header
-#include <ina219.h>
+class I2CBus;
 
-/**
- * @brief C++-Adapter für regisin/ina219.
- *
- * Liefert Einzelmessungen als (bus_V, current_mA, power_mW).
- * Konfiguration über Shunt-Widerstand und erwarteten Max-Strom,
- * sowie INA219-Betriebsparameter (Range/Gain/ADC).
- */
-class INA219Manager {
+enum InaRange { RANGE_16V=0, RANGE_32V=1 };
+enum InaGain  { GAIN_1_40MV=0, GAIN_2_80MV, GAIN_4_160MV, GAIN_8_320MV };
+enum InaAdc   { ADC_9BIT=0, ADC_10BIT, ADC_11BIT, ADC_12BIT=3,
+                ADC_2SAMP=9, ADC_4SAMP, ADC_8SAMP, ADC_16SAMP, ADC_32SAMP, ADC_64SAMP, ADC_128SAMP };
+
+class INA219 {
 public:
-    struct Config {
-        // Elektrische Parameter
-        float shunt_ohms        = 0.1f;   ///< Shunt-Widerstand [Ohm]
-        float max_expected_amps = 3.2f;   ///< Erwarteter Max-Strom [A] (für Kalibrierung)
+    bool init(I2CBus* bus, uint8_t addr, float shunt_ohms, float max_expected_amps, std::string* err=nullptr);
+    bool configure(InaRange vr, InaGain gain, InaAdc bus_adc, InaAdc shunt_adc, std::string* err=nullptr);
 
-        // I²C-Parameter (sofern von der verwendeten Lib unterstützt; default: /dev/i2c-1, 0x40)
-        int      i2c_bus        = 1;      ///< Standard RPi: Bus 1 (/dev/i2c-1) – ggf. ignoriert, wenn Lib es intern fixed.
-        uint8_t  i2c_address    = 0x40;   ///< Standard-Addr des INA219 – nur nutzen, wenn Lib SetAddress() o.ä. bietet.
+    bool reset(std::string* err=nullptr);
+    bool sleep(std::string* err=nullptr);
+    bool wake(std::string* err=nullptr);
 
-        // Mess-/Filter-Parameter
-        RANGE    range          = RANGE_16V;      ///< Bus-Range: 16V/32V (je nach Lib-Enum)
-        GAIN     gain           = GAIN_8_320MV;   ///< Shunt-ADC Gain
-        ADC      bus_adc        = ADC_12BIT;      ///< Bus-ADC Auflösung/Avg
-        ADC      shunt_adc      = ADC_12BIT;      ///< Shunt-ADC Auflösung/Avg
-    };
-
-    explicit INA219Manager(const Config& cfg = {});
-    ~INA219Manager();
-
-    // Non-copyable, movable
-    INA219Manager(const INA219Manager&) = delete;
-    INA219Manager& operator=(const INA219Manager&) = delete;
-    INA219Manager(INA219Manager&&) noexcept;
-    INA219Manager& operator=(INA219Manager&&) noexcept;
-
-    /**
-     * @brief Initialisiert den Sensor (I²C + Kalibrierung).
-     * @return true bei Erfolg, sonst false (Fehlertext optional in err)
-     */
-    bool Init(std::string* err = nullptr);
-
-    /**
-     * @brief Liest eine Messung.
-     * @return (bus_V, current_mA, power_mW) oder std::nullopt bei Fehler.
-     */
-    std::optional<std::tuple<double,double,double>> Read(std::string* err = nullptr) const;
-
-    /**
-     * @brief Optionales Freigeben von Ressourcen (die regisin-Lib braucht i.d.R. nichts).
-     */
-    void Shutdown();
-
-    bool isInitialized() const { return initialized_; }
-    const Config& cfg() const { return cfg_; }
+    bool voltage(float* V, std::string* err=nullptr);       // V
+    bool shuntVoltage(float* mV, std::string* err=nullptr); // mV
+    bool current(float* mA, std::string* err=nullptr);      // mA
+    bool power(float* mW, std::string* err=nullptr);        // mW
 
 private:
-    static void setErr(std::string* err, const std::string& msg);
-
-    Config cfg_;
-    INA219  ina_;            ///< regisin-Treiberinstanz
-    bool    initialized_ = false;
+    bool writeReg(uint8_t reg, uint16_t val, std::string* err);
+    bool readReg(uint8_t reg, uint16_t* val, std::string* err);
+    void computeCalibration(float shunt_volts_max, std::string* err);
+private:
+    I2CBus* bus_ = nullptr; uint8_t addr_ = 0x40;
+    float shunt_ohms_ = 0.1f;
+    float max_expected_amps_ = 2.0f;
+    float min_device_current_lsb_ = 0.0f;
+    float current_lsb_ = 0.0f; float power_lsb_ = 0.0f;
+    InaRange vrange_ = RANGE_32V; InaGain gain_ = GAIN_8_320MV;
 };
