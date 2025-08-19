@@ -1,7 +1,0 @@
-C:/Users/cmueller/Documents/GitHub/SoSeC/build/CMakeFiles/sosesta.dir
-C:/Users/cmueller/Documents/GitHub/SoSeC/build/CMakeFiles/edit_cache.dir
-C:/Users/cmueller/Documents/GitHub/SoSeC/build/CMakeFiles/rebuild_cache.dir
-C:/Users/cmueller/Documents/GitHub/SoSeC/build/CMakeFiles/list_install_components.dir
-C:/Users/cmueller/Documents/GitHub/SoSeC/build/CMakeFiles/install.dir
-C:/Users/cmueller/Documents/GitHub/SoSeC/build/CMakeFiles/install/local.dir
-C:/Users/cmueller/Documents/GitHub/SoSeC/build/CMakeFiles/install/strip.dir
